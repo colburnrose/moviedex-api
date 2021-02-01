@@ -4,7 +4,7 @@ Create a project called moviedex-api and initialize it as an Express app to meet
 
 ```Users can search for Movies by genre, country or avg_vote
 The endpoint is GET /movie
-```The search options for genre, country, and/or average vote are provided in query string parameters.
+The search options for genre, country, and/or average vote are provided in query string parameters.
 When searching by genre, users are searching for whether the Movie's genre includes a specified string. 
 The search should be case insensitive.
 When searching by country, users are searching for whether the Movie's country includes a specified string. 
