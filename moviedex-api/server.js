@@ -1,34 +1,37 @@
 require("dotenv").config();
 const express = require("express");
 const morgan = require("morgan");
-const cors = require("cors");
 const helmet = require("helmet");
+const cors = require("cors");
 const MOVIES = require("./moviedex.json");
 
 const app = express();
-
-app.use(morgan("dev"));
 app.use(helmet());
 app.use(cors());
+app.use(morgan("dev"));
 
 // validate bearer token
-// app.use(function validateBearerToken(req, res, next) {
-//   const apiToken = process.env.API_TOKEN;
-//   const authToken = req.get("Authorization");
-//   // move to the next middleware
-//   // if (!authToken || authToken.split(" ")[1] !== apiToken) {
-//   //   return res.status(401).json({ error: "Unauthorized token!" });
-//   // }
-//   if (authToken !== apiToken) {
-//     return res.status(401).json({ error: "Unauthorized access!" });
-//   }
-//   next();
-// });
+app.use(function validateBearerToken(req, res, next) {
+  let authToken = req.get("Authorization");
+  let apiToken = process.env.API_TOKEN;
 
-app.get("/movie", function handleGetMovie(req, res) {
+  if (!authToken) {
+    return res
+      .status(401)
+      .json({ message: "Please provide your bearer API_TOKEN" });
+  }
+
+  // // move to the next middleware
+  if (!authToken || authToken.split(" ")[1] !== apiToken) {
+    return res.status(401).json({ error: "Unauthorized token!" });
+  }
+
+  next();
+});
+
+app.get("/movie", function handleGetMovies(req, res) {
   // get response
   let response = MOVIES;
-  console.log(response);
   // search options queries
   const { genre, country, avg_vote } = req.query;
 
@@ -46,15 +49,18 @@ app.get("/movie", function handleGetMovie(req, res) {
   }
 
   if (avg_vote) {
+    if (isNaN(avg_vote)) {
+      return res.status(400).send("Average vote should be a number!");
+    }
     response = response.filter(
-      (movie) => Number(movie.avg_vote) >= Number(avg_vote)
+      (movie) => Number(movie.avg_vote) >= Number(req.query.avg_vote)
     );
   }
 
   res.json(response);
 });
 
-const PORT = 9000;
+const PORT = 8000;
 
 app.listen(PORT, () => {
   console.log(`MovieDex Server running at http://localhost:${PORT}`);
