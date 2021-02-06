@@ -8,14 +8,14 @@ const MOVIES = require("./moviedex");
 const app = express();
 app.use(helmet());
 app.use(cors());
-app.use(morgan("dev"));
+const morganConfiguration =
+  process.env.NODE_ENV === "production" ? "tiny" : "common";
+app.use(morgan(morganConfiguration));
 
 // validate bearer token
 app.use(function validateBearerToken(req, res, next) {
   const bearerToken = req.get("Authorization");
   const apiToken = process.env.API_TOKEN;
-
-  console.log(`Bearer token: `, bearerToken); //undefined
 
   if (!bearerToken) {
     return res
@@ -62,7 +62,17 @@ app.get("/movie", function handleGetMovies(req, res) {
   res.json(response);
 });
 
-const PORT = 8000;
+app.use((error, req, res, next) => {
+  let response = "";
+  if (process.env.NODE_ENV === "production") {
+    response = { error: { message: "server error" } };
+  } else {
+    response = { error };
+  }
+  res.status(500).json(response);
+});
+
+const PORT = process.env.PORT || 8000;
 
 app.listen(PORT, () => {
   console.log(`MovieDex Server running at http://localhost:${PORT}`);
